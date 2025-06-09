@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 이상형은 전국에 몇 %일까?</title>
+    <style>
+        /* CSS는 이전과 동일합니다. */
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+
+        :root {
+            --primary-color: #5d9cec;
+            --secondary-color: #4a5a6a;
+            --background-color: #f4f7f6;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --selected-color: #e7f1ff;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Gowun Dodum', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--card-color);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--secondary-color);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .criteria-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .criteria-group h3 {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 10px;
+        }
+        
+        #targetGender h3 {
+             border-left-color: #ff7bac;
+        }
+
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-family: 'Gowun Dodum', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .option-btn:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .option-btn.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(93, 156, 236, 0.3);
+        }
+        
+        #targetGender .option-btn.selected {
+            background-color: #ff7bac;
+            border-color: #ff7bac;
+            box-shadow: 0 4px 10px rgba(255, 123, 172, 0.4);
+        }
+
+        .result-section {
+            margin-top: 40px;
+            padding: 25px;
+            background-color: var(--selected-color);
+            border-radius: 10px;
+            border: 1px dashed var(--primary-color);
+        }
+        
+        .result-section p {
+            font-size: 1.1rem;
+            margin: 0 0 10px 0;
+        }
+
+        #result-percentage {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+            transition: all 0.3s ease;
+        }
+        
+        #result-message {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: var(--secondary-color);
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        #reset-btn {
+            margin-top: 20px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-family: 'Gowun Dodum', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        #reset-btn:hover {
+            background: #333;
+        }
+        
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            header h1 { font-size: 1.8rem; }
+            .option-btn { padding: 8px 15px; font-size: 0.9rem; }
+            #result-percentage { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>내 이상형은 전국에 몇 %일까?</h1>
+            <p>내가 원하는 이상형의 조건을 선택해보세요.<br>선택한 조건에 부합하는 사람이 대한민국에 몇 %나 있는지 알려드려요!</p>
+        </header>
+
+        <main id="criteria-container">
+            <!-- JavaScript로 조건들이 여기에 생성됩니다. -->
+        </main>
+
+        <div class="result-section">
+            <p>내 이상형은 해당 성별의 <strong style="color: var(--primary-color);">미혼</strong> 인구 중...</p>
+            <h2 id="result-percentage">100.00%</h2>
+            <p id="result-message">먼저 찾는 이상형의 성별을 선택해주세요!</p>
+        </div>
+        
+        <button id="reset-btn">처음부터 다시하기</button>
+    </div>
+
+    <script>
+        // --- 데이터 ---
+        const unmarriedRate = {
+            male:   { age_20: 0.951, age_30: 0.505, age_40: 0.236 },
+            female: { age_20: 0.952, age_30: 0.328, age_40: 0.119 }
+        };
+
+        const criteriaData = [
+            {
+                id: 'targetGender',
+                title: '① 찾는 이상형의 성별',
+                type: 'controller',
+                options: [ { label: '남성', value: 'male' }, { label: '여성', value: 'female' }]
+            },
+            {
+                id: 'age',
+                title: '나이대 (기혼자 제외, 중복선택 가능)',
+                type: 'multi-select-sum',
+                options: [
+                    { label: '상관없음', value: 1, isExclusive: true, key: 'all' },
+                    { label: '20대', value: 0.35, key: 'age_20' }, { label: '30대', value: 0.33, key: 'age_30' }, { label: '40대', value: 0.32, key: 'age_40' }
+                ]
+            },
+            {
+                id: 'height',
+                title: '키',
+                type: 'dynamic-select',
+                options: [
+                    { label: '상관없음', value: 1, gender: 'both' },
+                    { label: '171cm 이상', value: 0.711, gender: 'male' }, { label: '176cm 이상', value: 0.376, gender: 'male' }, { label: '181cm 이상', value: 0.121, gender: 'male' },
+                    { label: '152cm ~ 164cm', value: 0.75, gender: 'female' }
+                ]
+            },
+            {
+                id: 'salary',
+                title: '월급 (세전, 월)',
+                type: 'age-dependent-select',
+                options: [
+                    { label: '상관없음', value: 1 },
+                    { label: '250만 이상', value: { age_20: 0.188, age_30: 0.576, age_40: 0.578 } }, { label: '350만 이상', value: { age_20: 0.024, age_30: 0.324, age_40: 0.434 } },
+                    { label: '450만 이상', value: { age_20: 0.000, age_30: 0.154, age_40: 0.294 } }, { label: '550만 이상', value: { age_20: 0.000, age_30: 0.082, age_40: 0.190 } },
+                    { label: '650만 이상', value: { age_20: 0.000, age_30: 0.046, age_40: 0.124 } },
+                ]
+            },
+            {
+                id: 'bmi',
+                title: '체형 (BMI 기준, 중복선택 가능)',
+                type: 'multi-select-sum',
+                options: [
+                    { label: '상관없음', value: 1, isExclusive: true },
+                    { label: '저체중', value: { male: 0.035, female: 0.065 } }, { label: '정상', value: { male: 0.51, female: 0.625 } },
+                    { label: '과체중/경도비만', value: { male: 0.315, female: 0.215 } }, { label: '고도비만', value: { male: 0.065, female: 0.03 } }
+                ]
+            },
+            {
+                id: 'religion',
+                title: '종교',
+                type: 'single-select',
+                options: [
+                    { label: '상관없음', value: 1 },
+                    { label: '종교 있음', value: { male: 0.46, female: 0.53 } }, { label: '개신교', value: { male: 0.18, female: 0.21 } },
+                    { label: '불교', value: { male: 0.16, female: 0.18 } }, { label: '천주교', value: { male: 0.10, female: 0.12 } }, { label: '무종교', value: { male: 0.54, female: 0.47 } },
+                ]
+            },
+            {
+                id: 'smoking',
+                title: '흡연 여부',
+                type: 'single-select',
+                options: [ { label: '상관없음', value: 1 }, { label: '비흡연자', value: { male: 0.676, female: 0.937 } } ]
+            },
+            {
+                id: 'region',
+                title: '거주 지역',
+                type: 'single-select',
+                options: [ { label: '상관없음', value: 1 }, { label: '수도권', value: 0.5 }, { label: '서울', value: 0.18 } ]
+            },
+            {
+                id: 'education',
+                title: '학력',
+                type: 'single-select',
+                options: [
+                    { label: '상관없음', value: 1 }, { label: '4년제 대졸 이상', value: 0.55 }, { label: '인서울 4년제 이상', value: 0.10 }, { label: 'SKY 이상', value: 0.023 }
+                ]
+            }
+        ];
+
+        const criteriaContainer = document.getElementById('criteria-container');
+        const resultPercentageEl = document.getElementById('result-percentage');
+        const resultMessageEl = document.getElementById('result-message');
+        const resetBtn = document.getElementById('reset-btn');
+
+        function renderCriteria() {
+            criteriaData.forEach(criterion => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'criteria-group';
+                groupDiv.id = criterion.id;
+                groupDiv.dataset.type = criterion.type;
+                groupDiv.innerHTML = `<h3>${criterion.title}</h3><div class="options-container"></div>`;
+                criteriaContainer.appendChild(groupDiv);
+                if (criterion.type !== 'dynamic-select') updateOptions(criterion.id, criterion.options);
+            });
+        }
+        
+        function updateOptions(groupId, options) {
+            const optionsContainer = document.querySelector(`#${groupId} .options-container`);
+            optionsContainer.innerHTML = '';
+            options.forEach(option => {
+                const valueAttr = typeof option.value === 'object' ? JSON.stringify(option.value) : option.value;
+                const exclusiveAttr = option.isExclusive ? 'data-exclusive="true"' : '';
+                const keyAttr = option.key ? `data-key="${option.key}"` : '';
+                optionsContainer.innerHTML += `<button class="option-btn" data-value='${valueAttr}' ${exclusiveAttr} ${keyAttr}>${option.label}</button>`;
+            });
+        }
+        
+        function updateDynamicOptions(selectedGender) {
+            const heightCriterion = criteriaData.find(c => c.id === 'height');
+            const relevantOptions = heightCriterion.options.filter(opt => opt.gender === selectedGender || opt.gender === 'both');
+            updateOptions('height', relevantOptions);
+        }
+
+        // 미혼율 계수를 계산하는 함수
+        function getUnmarriedFactor(selectedGender, selectedAgeButtons) {
+            let totalWeightedUnmarriedProb = 0;
+            let totalPopulationShare = 0;
+            const ageOptions = criteriaData.find(c => c.id === 'age').options;
+
+            // '상관없음'이 선택되었거나, 아무 나이대도 선택되지 않은 경우 -> 전체 나이대 가중 평균
+            if (selectedAgeButtons.length === 0 || selectedAgeButtons[0].dataset.exclusive) {
+                ageOptions.forEach(opt => {
+                    if (opt.key && opt.key !== 'all') { // '상관없음' 옵션은 제외하고 계산
+                        totalWeightedUnmarriedProb += unmarriedRate[selectedGender][opt.key] * opt.value;
+                        totalPopulationShare += opt.value;
+                    }
+                });
+            } else { // 특정 나이대가 선택된 경우
+                selectedAgeButtons.forEach(ageBtn => {
+                    const ageKey = ageBtn.dataset.key;
+                    const ageShare = parseFloat(ageBtn.dataset.value);
+                    totalWeightedUnmarriedProb += unmarriedRate[selectedGender][ageKey] * ageShare;
+                    totalPopulationShare += ageShare;
+                });
+            }
+            return totalPopulationShare > 0 ? totalWeightedUnmarriedProb / totalPopulationShare : 1;
+        }
+
+        function calculatePercentage() {
+            let finalPercentage = 1;
+            const selectedGender = document.querySelector('#targetGender .selected')?.dataset.value || 'male';
+            const selectedAgeButtons = document.querySelectorAll('#age .option-btn.selected');
+
+            // 1. 각 조건별 확률 계산
+            criteriaData.forEach(criterion => {
+                if (criterion.type === 'controller') return;
+                const groupEl = document.getElementById(criterion.id);
+                const selectedButtons = groupEl.querySelectorAll('.option-btn.selected');
+                if (selectedButtons.length === 0) return;
+
+                let groupProbability = 1;
+
+                if (criterion.type === 'multi-select-sum') {
+                    // (이하 로직은 이전과 동일)
+                    let sum = 0;
+                    if (Array.from(selectedButtons).some(btn => btn.dataset.exclusive)) groupProbability = 1;
+                    else {
+                        selectedButtons.forEach(btn => {
+                            const valueStr = btn.dataset.value;
+                            let probValue = 0;
+                            try {
+                                const parsedValue = JSON.parse(valueStr);
+                                probValue = (typeof parsedValue === 'object' && parsedValue !== null) ? (parsedValue[selectedGender] || 0) : parseFloat(parsedValue);
+                            } catch (e) { probValue = parseFloat(valueStr); }
+                            sum += probValue;
+                        });
+                        groupProbability = (sum > 0) ? Math.min(sum, 1) : 1;
+                    }
+                } else if (criterion.type === 'age-dependent-select') {
+                    // (이하 로직은 이전과 동일)
+                    const selectedBtn = selectedButtons[0];
+                    const valueData = selectedBtn.dataset.value;
+                    if (valueData == 1) groupProbability = 1;
+                    else {
+                        const salaryProbs = JSON.parse(valueData);
+                        let totalWeightedProb = 0, totalPopulationShare = 0;
+                        const ageOptions = criteriaData.find(c => c.id === 'age').options;
+                        if (selectedAgeButtons.length === 0 || selectedAgeButtons[0].dataset.exclusive) {
+                            ageOptions.forEach(opt => {
+                                if (opt.key && opt.key !== 'all') {
+                                    totalWeightedProb += salaryProbs[opt.key] * opt.value;
+                                    totalPopulationShare += opt.value;
+                                }
+                            });
+                        } else {
+                            selectedAgeButtons.forEach(ageBtn => {
+                                const ageKey = ageBtn.dataset.key;
+                                const ageShare = parseFloat(ageBtn.dataset.value);
+                                totalWeightedProb += salaryProbs[ageKey] * ageShare;
+                                totalPopulationShare += ageShare;
+                            });
+                        }
+                        groupProbability = totalPopulationShare > 0 ? totalWeightedProb / totalPopulationShare : 1;
+                    }
+                } else { // single-select, dynamic-select
+                    // (이하 로직은 이전과 동일)
+                    const selectedBtn = selectedButtons[0];
+                    let value = selectedBtn.dataset.value;
+                    try {
+                        const parsedValue = JSON.parse(value);
+                        groupProbability = (typeof parsedValue === 'object' && parsedValue !== null) ? parsedValue[selectedGender] : parseFloat(value);
+                    } catch (e) { groupProbability = parseFloat(value); }
+                }
+                finalPercentage *= groupProbability;
+            });
+            
+            // 2. 계산된 전체 확률에 미혼율 계수를 곱함
+            const unmarriedFactor = getUnmarriedFactor(selectedGender, selectedAgeButtons);
+            finalPercentage *= unmarriedFactor;
+
+            resultPercentageEl.textContent = (finalPercentage * 100).toFixed(2) + '%';
+            updateResultMessage(finalPercentage * 100);
+        }
+        
+        function updateResultMessage(percentage) {
+            // (이전과 동일)
+            if (document.querySelector('#targetGender .selected') === null) {
+                 resultMessageEl.textContent = "먼저 찾는 이상형의 성별을 선택해주세요!"; return;
+            }
+            if (percentage >= 50) resultMessageEl.textContent = "꽤 많은 사람들이 당신의 이상형이네요!";
+            else if (percentage >= 10) resultMessageEl.textContent = "조금만 노력하면 찾을 수 있을 거예요!";
+            else if (percentage >= 1) resultMessageEl.textContent = "정말 특별한 이상형을 찾고 계시는군요!";
+            else if (percentage > 0.00) resultMessageEl.textContent = "상상 속의 유니콘을 찾으셨네요...!";
+            else resultMessageEl.textContent = "이런 사람은 존재하지 않을지도... 🦄";
+        }
+        
+        criteriaContainer.addEventListener('click', (e) => {
+            // (이전과 동일)
+            if (!e.target.classList.contains('option-btn')) return;
+            const clickedButton = e.target;
+            const parentGroup = clickedButton.closest('.criteria-group');
+            const groupType = parentGroup.dataset.type;
+
+            if (groupType === 'multi-select-sum') {
+                if (clickedButton.dataset.exclusive) {
+                    if (clickedButton.classList.contains('selected')) clickedButton.classList.remove('selected');
+                    else { parentGroup.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected')); clickedButton.classList.add('selected'); }
+                } else {
+                    parentGroup.querySelector('[data-exclusive="true"]')?.classList.remove('selected');
+                    clickedButton.classList.toggle('selected');
+                }
+            } else {
+                if (clickedButton.classList.contains('selected')) clickedButton.classList.remove('selected');
+                else { parentGroup.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected')); clickedButton.classList.add('selected'); }
+            }
+            if (parentGroup.id === 'targetGender') {
+                updateDynamicOptions(clickedButton.classList.contains('selected') ? clickedButton.dataset.value : 'male');
+            }
+            calculatePercentage();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            // (이전과 동일)
+            document.querySelectorAll('.option-btn.selected').forEach(btn => btn.classList.remove('selected'));
+            updateDynamicOptions('male');
+            calculatePercentage();
+            resultMessageEl.textContent = "조건이 모두 초기화되었어요.";
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // (이전과 동일)
+            renderCriteria();
+            updateDynamicOptions('male');
+            calculatePercentage();
+        });
+    </script>
+</body>
+</html>
